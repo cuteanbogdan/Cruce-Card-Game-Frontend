@@ -12,7 +12,6 @@ function GameInterface() {
   const token = localStorage.getItem("token");
   const decoded = jwt_decode(token);
   const user = decoded.user;
-  console.log(user);
   const history = useNavigate();
 
   function joinGame(gameIdToJoin) {
@@ -29,6 +28,7 @@ function GameInterface() {
     setSocket(newSocket);
     newSocket.on("gamesList", (data) => {
       setGames(data);
+      console.log(data);
     });
     newSocket.on("error", (data) => {
       // Display the error message to the user
@@ -42,6 +42,8 @@ function GameInterface() {
 
     newSocket.on("gameJoined", (data) => {
       console.log("Joined game with ID:", data.gameId);
+      setGameId(data.gameId);
+      history(`/game/${data.gameId}`);
     });
 
     newSocket.on("error", (data) => {
