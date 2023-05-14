@@ -12,7 +12,7 @@ function Game() {
   const token = localStorage.getItem("token");
   const decoded = jwt_decode(token);
   const user = decoded.user;
-  const [userId] = useState("Your User ID"); // Replace with actual user ID
+  const [userId] = useState(user.id);
   const gameId = useParams();
 
   const fetchGameData = async () => {
@@ -27,8 +27,17 @@ function Game() {
       console.error("Failed to fetch game data", error);
     }
   };
+  const handleStartBid = () => {
+    if (socket) {
+      socket.emit("startBid", {
+        gameId: gameId.id,
+        userId: user.id,
+      });
+    } else {
+      console.error("Socket is not connected yet");
+    }
+  };
 
-  console.log(players); //empty!!
   useEffect(() => {
     const newSocket = io("http://localhost:5000", {
       withCredentials: false,
@@ -39,10 +48,15 @@ function Game() {
       setPlayers(game.players);
     });
 
+    newSocket.on("startBid", (data) => {
+      console.log("startBid event received", data);
+    });
+
     newSocket.on("gameUpdate", (data) => {
       setPlayers(data.players);
       setCurrentBid(data.currentBid);
       setCurrentBidder(data.currentBidder);
+      console.log("bidder:" + data.currentBidder);
     });
 
     newSocket.on("bidPlaced", (data) => {
@@ -79,26 +93,35 @@ function Game() {
   };
 
   return (
-    <div>
-      {players.map((player, index) => (
-        <div key={index}>
-          <h2>{player.name}</h2>
-          <img src={player.avatar} alt={player.name} />
-          <p>Score: {player.score}</p>
-        </div>
-      ))}
-      <h2>Current bid: {currentBid}</h2>
-      {currentBidder === userId && (
-        <form onSubmit={handleBidSubmit}>
-          <input
-            type="number"
-            value={myBid}
-            onChange={handleBidChange}
-            min={currentBid + 1}
-          />
-          <button type="submit">Place bid</button>
-        </form>
-      )}
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column-reverse",
+        alignItems: "center",
+      }}
+    >
+      {players &&
+        players.map((player, index) => (
+          <div key={index}>
+            <h2>{players[index]}</h2>
+            <img src={player.avatar} alt={player.name} />
+            <p>Score: {player.score}</p>
+          </div>
+        ))}
+      <div>
+        <h2>Current bid: {currentBid}</h2>
+        {currentBidder === userId && (
+          <form onSubmit={handleBidSubmit}>
+            <input
+              type="number"
+              value={myBid}
+              onChange={handleBidChange}
+              min={currentBid + 1}
+            />
+            <button type="submit">Place bid</button>
+          </form>
+        )}
+      </div>
     </div>
   );
 }

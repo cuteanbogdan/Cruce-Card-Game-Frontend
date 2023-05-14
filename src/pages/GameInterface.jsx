@@ -58,9 +58,10 @@ function GameInterface() {
     <div>
       <button onClick={createGame}>Create Game</button>
 
-      {games.map((game) => (
-        <Game key={game._id} game={game} joinGame={joinGame} />
-      ))}
+      {games &&
+        games.map((game) => (
+          <Game key={game._id} game={game} joinGame={joinGame} />
+        ))}
     </div>
   );
 }
